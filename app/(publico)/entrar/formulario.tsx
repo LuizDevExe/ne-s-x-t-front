@@ -4,11 +4,12 @@ import { useActionState } from "react";
 import { ALERTA_SERVIDOR, Abas, Alerta, Campo, CampoSenha, Enviar, LinkComVolta, Rodape } from "../ui";
 import { entrar } from "./actions";
 
-export function FormularioEntrar({ volta }: { volta: string }) {
+export function FormularioEntrar({ volta, expirou }: { volta: string; expirou?: boolean }) {
   const [estado, acao, pendente] = useActionState(entrar, {});
   return (
     <>
       <Abas atual="/entrar" volta={volta} />
+      {expirou && <p className="text-[13px] text-ink-3">Sua sessão expirou. Entre de novo.</p>}
       <form action={acao} aria-label="Entrar" className="flex flex-col gap-4">
         {estado.alerta === "credenciais" && (
           <Alerta

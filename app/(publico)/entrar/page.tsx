@@ -15,8 +15,11 @@ export default function Entrar({ searchParams }: PageProps<"/entrar">) {
       </div>
       {/* searchParams é dado da requisição: lido dentro do Suspense, o resto vira shell estático */}
       <Suspense>
-        {searchParams.then(({ volta }) => (
-          <FormularioEntrar volta={typeof volta === "string" ? volta : ""} />
+        {searchParams.then(({ volta, expirou }) => (
+          <FormularioEntrar
+            volta={typeof volta === "string" ? volta : ""}
+            expirou={expirou === "1"}
+          />
         ))}
       </Suspense>
     </>
