@@ -28,5 +28,7 @@ export async function apiFetch<T>(caminho: string, init?: RequestInit): Promise<
   if (!resposta.ok) {
     throw new ApiError(resposta.status, await resposta.text());
   }
-  return (await resposta.json()) as T;
+  // 204 ou corpo vazio (200 sem conteúdo): nada para parsear.
+  const texto = await resposta.text();
+  return (texto ? JSON.parse(texto) : undefined) as T;
 }

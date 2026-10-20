@@ -40,6 +40,16 @@ describe("apiFetch", () => {
     await expect(apiFetch("/qualquer")).resolves.toEqual({ ola: "mundo" });
   });
 
+  it("204 resolve para undefined", async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(new Response(null, { status: 204 }));
+    await expect(apiFetch("/qualquer")).resolves.toBeUndefined();
+  });
+
+  it("200 com corpo vazio resolve para undefined", async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(new Response("", { status: 200 }));
+    await expect(apiFetch("/qualquer")).resolves.toBeUndefined();
+  });
+
   it("403 lança ApiError com status 403", async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
       new Response("proibido", { status: 403 }),
