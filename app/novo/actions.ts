@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
 
 export type EstadoPost = { erro?: string; titulo?: string; conteudo?: string };
@@ -24,6 +24,7 @@ export async function criarPost(_anterior: EstadoPost, form: FormData): Promise<
       body: JSON.stringify({ title, content }),
     });
   } catch (e) {
+    unstable_rethrow(e); // deixa passar redirect()/notFound() do apiFetch (ex.: sessão expirada)
     if (e instanceof ApiError && e.status === 400) {
       return { erro: "Não foi possível publicar. Revise título e conteúdo.", titulo: title, conteudo: content };
     }

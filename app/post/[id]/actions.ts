@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
 
 const ERRO_DONO = "Esse post é de outra pessoa.";
@@ -24,6 +24,7 @@ export async function responder(
       body: JSON.stringify({ content }),
     });
   } catch (e) {
+    unstable_rethrow(e); // deixa passar redirect()/notFound() do apiFetch (ex.: sessão expirada)
     if (e instanceof ApiError && e.status === 404) {
       return { erro: "Esse post não existe mais. Volte para a lista de posts." };
     }
@@ -54,6 +55,7 @@ export async function editarPost(id: number, _anterior: EstadoPost, form: FormDa
       body: JSON.stringify({ title, content }),
     });
   } catch (e) {
+    unstable_rethrow(e); // deixa passar redirect()/notFound() do apiFetch (ex.: sessão expirada)
     if (e instanceof ApiError && e.status === 403) {
       return { erro: ERRO_DONO, titulo: title, conteudo: content };
     }
@@ -80,6 +82,7 @@ export async function apagarPost(
   try {
     await apiFetch(`/post/${id}`, { method: "DELETE" });
   } catch (e) {
+    unstable_rethrow(e); // deixa passar redirect()/notFound() do apiFetch (ex.: sessão expirada)
     if (e instanceof ApiError && e.status === 403) return { erro: ERRO_DONO };
     if (e instanceof ApiError && e.status === 404) redirect("/");
     return { erro: ERRO_SERVIDOR };
@@ -98,6 +101,7 @@ export async function apagarResposta(
   try {
     await apiFetch(`/answers/${id}`, { method: "DELETE" });
   } catch (e) {
+    unstable_rethrow(e); // deixa passar redirect()/notFound() do apiFetch (ex.: sessão expirada)
     if (e instanceof ApiError && e.status === 403) return { erro: ERRO_DONO };
     if (e instanceof ApiError && e.status === 404) {
       revalidatePath(`/post/${postId}`);
