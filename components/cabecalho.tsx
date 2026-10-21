@@ -28,7 +28,7 @@ export function Cabecalho({ usuario }: { usuario: { name: string } }) {
       <div className="ml-auto flex items-center gap-1 md:gap-2">
         <Link
           href="/novo"
-          className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-sm bg-primary px-3 text-sm font-medium text-white hover:bg-primary-hover"
+          className="flex min-h-11 items-center justify-center gap-1.5 rounded-sm bg-primary px-3 text-sm font-medium text-white hover:bg-primary-hover"
         >
           <svg
             aria-hidden="true"
@@ -42,7 +42,7 @@ export function Cabecalho({ usuario }: { usuario: { name: string } }) {
           >
             <path d="M8 3v10M3 8h10" />
           </svg>
-          <span className="hidden md:inline">Novo post</span>
+          Novo post
         </Link>
 
         <span className="flex h-11 items-center gap-2 px-1 text-sm text-ink-2" title={usuario.name}>
