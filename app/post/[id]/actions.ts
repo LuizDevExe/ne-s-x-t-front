@@ -1,0 +1,111 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { apiFetch, ApiError } from "@/lib/api";
+
+const ERRO_DONO = "Esse post é de outra pessoa.";
+const ERRO_SERVIDOR = "Não conseguimos falar com o servidor. Tente de novo em alguns segundos.";
+
+export type EstadoResposta = { erro?: string };
+
+export async function responder(
+  postId: number,
+  _anterior: EstadoResposta,
+  form: FormData,
+): Promise<EstadoResposta> {
+  const content = String(form.get("content") ?? "").trim();
+  if (!content) return { erro: "Escreva uma resposta antes de enviar." };
+
+  try {
+    await apiFetch(`/answers/${postId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) {
+      return { erro: "Esse post não existe mais. Volte para a lista de posts." };
+    }
+    if (e instanceof ApiError && e.status === 400) {
+      return { erro: "Não foi possível enviar a resposta. Revise o texto e tente de novo." };
+    }
+    return { erro: ERRO_SERVIDOR };
+  }
+
+  revalidatePath(`/post/${postId}`);
+  return {};
+}
+
+export type EstadoPost = { erro?: string; titulo?: string; conteudo?: string };
+
+export async function editarPost(id: number, _anterior: EstadoPost, form: FormData): Promise<EstadoPost> {
+  const title = String(form.get("title") ?? "").trim();
+  const content = String(form.get("content") ?? "").trim();
+
+  if (!title || !content) {
+    return { erro: "Preencha título e conteúdo antes de salvar.", titulo: title, conteudo: content };
+  }
+
+  try {
+    await apiFetch(`/post/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content }),
+    });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 403) {
+      return { erro: ERRO_DONO, titulo: title, conteudo: content };
+    }
+    if (e instanceof ApiError && e.status === 404) {
+      return { erro: "Esse post não existe mais.", titulo: title, conteudo: content };
+    }
+    if (e instanceof ApiError && e.status === 400) {
+      return { erro: "Não foi possível salvar. Revise título e conteúdo.", titulo: title, conteudo: content };
+    }
+    return { erro: ERRO_SERVIDOR, titulo: title, conteudo: content };
+  }
+
+  revalidatePath(`/post/${id}`);
+  redirect(`/post/${id}`);
+}
+
+export type EstadoApagar = { erro?: string };
+
+export async function apagarPost(
+  id: number,
+  _anterior: EstadoApagar,
+  _form: FormData,
+): Promise<EstadoApagar> {
+  try {
+    await apiFetch(`/post/${id}`, { method: "DELETE" });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 403) return { erro: ERRO_DONO };
+    if (e instanceof ApiError && e.status === 404) redirect("/");
+    return { erro: ERRO_SERVIDOR };
+  }
+
+  revalidatePath("/");
+  redirect("/");
+}
+
+export async function apagarResposta(
+  id: number,
+  postId: number,
+  _anterior: EstadoApagar,
+  _form: FormData,
+): Promise<EstadoApagar> {
+  try {
+    await apiFetch(`/answers/${id}`, { method: "DELETE" });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 403) return { erro: ERRO_DONO };
+    if (e instanceof ApiError && e.status === 404) {
+      revalidatePath(`/post/${postId}`);
+      return {};
+    }
+    return { erro: ERRO_SERVIDOR };
+  }
+
+  revalidatePath(`/post/${postId}`);
+  return {};
+}
