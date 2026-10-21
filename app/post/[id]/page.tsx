@@ -6,6 +6,7 @@ import { BotaoApagar } from "@/components/botao-apagar";
 import { Cabecalho } from "@/components/cabecalho";
 import { apiFetch, ApiError } from "@/lib/api";
 import { iniciais } from "@/lib/iniciais";
+import { palavraResposta } from "@/lib/respostas";
 import { idDoUsuario } from "@/lib/sessao";
 import { tempoRelativo } from "@/lib/tempo";
 import { apagarPost, apagarResposta } from "./actions";
@@ -106,7 +107,8 @@ async function Conteudo({ params }: { params: PageProps<"/post/[id]">["params"] 
 
         <section aria-labelledby="respostas" className="flex flex-col gap-3">
           <h2 id="respostas" className="text-base font-semibold tracking-[-0.2px] text-ink-1">
-            <span className="font-mono font-normal text-ink-2">{post.answers.length}</span> respostas
+            <span className="font-mono font-normal text-ink-2">{post.answers.length}</span>{" "}
+            {palavraResposta(post.answers.length)}
           </h2>
 
           {post.answers.length === 0 ? (

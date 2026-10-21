@@ -3,5 +3,5 @@
 export function paginaDaQuery(valor: string | string[] | undefined): number {
   const bruto = Array.isArray(valor) ? valor[0] : valor;
   const n = Number(bruto);
-  return Number.isInteger(n) && n >= 1 ? n : 1;
+  return Number.isSafeInteger(n) && n >= 1 ? n : 1;
 }

@@ -59,5 +59,7 @@ export async function idDoUsuario(): Promise<number | null> {
 // O parser de URL resolve o que o navegador resolveria (barra invertida, tab etc.).
 export function destinoSeguro(volta: string | null): string {
   if (!volta?.startsWith("/")) return "/";
-  return new URL(volta, "http://local").host === "local" ? volta : "/";
+  const url = new URL(volta, "http://local");
+  if (url.host !== "local" || url.pathname.startsWith("//")) return "/";
+  return url.pathname + url.search + url.hash;
 }

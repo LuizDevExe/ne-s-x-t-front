@@ -22,8 +22,17 @@ describe("destinoSeguro", () => {
     ["/\t/mal.com", "/"],
     ["", "/"],
     [null, "/"],
+    ["/..//mal.com", "/"],
+    ["/.//mal.com", "/"],
+    ["/%2e%2e//mal.com", "/"],
+    ["/post/3?x=1#r", "/post/3?x=1#r"],
   ])("%j -> %j", (volta, esperado) => {
     expect(destinoSeguro(volta)).toBe(esperado);
+  });
+
+  it("nunca devolve uma string com CR ou LF", () => {
+    const resultado = destinoSeguro("/a\r\nSet-Cookie: x=1");
+    expect(resultado).not.toMatch(/[\r\n]/);
   });
 });
 

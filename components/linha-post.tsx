@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { iniciais } from "@/lib/iniciais";
+import { palavraResposta } from "@/lib/respostas";
 import { tempoRelativo } from "@/lib/tempo";
 
 type Post = {
@@ -32,7 +33,7 @@ export function LinhaPost({ post, meuId }: { post: Post; meuId: number | null })
           {seu && <SeloSeu />}
         </span>
         <span className="text-[13px] text-ink-3">
-          {post.user.name} · <span className="font-mono text-ink-2">{n}</span> respostas · {quando}
+          {post.user.name} · <span className="font-mono text-ink-2">{n}</span> {palavraResposta(n)} · {quando}
         </span>
       </Link>
 
@@ -67,7 +68,7 @@ export function LinhaPost({ post, meuId }: { post: Post; meuId: number | null })
             <path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z" />
           </svg>
           <span>
-            <span className="font-mono text-ink-2">{n}</span> respostas
+            <span className="font-mono text-ink-2">{n}</span> {palavraResposta(n)}
           </span>
         </div>
         <div className="text-right text-[13px] text-ink-3">{quando}</div>
