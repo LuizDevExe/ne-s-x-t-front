@@ -1,8 +1,10 @@
 type MarcaProps = {
   tamanho?: 20 | 24;
+  // só o ícone abaixo de md (o cabeçalho logado não cabe em 375px com o texto)
+  compacta?: boolean;
 };
 
-export function Marca({ tamanho = 24 }: MarcaProps) {
+export function Marca({ tamanho = 24, compacta }: MarcaProps) {
   return (
     <span className="inline-flex items-center gap-2">
       <svg
@@ -28,7 +30,7 @@ export function Marca({ tamanho = 24 }: MarcaProps) {
       </svg>
       <span
         aria-hidden="true"
-        className="whitespace-nowrap text-base leading-none font-semibold tracking-tight text-ink-1"
+        className={`${compacta ? "hidden md:inline" : ""} whitespace-nowrap text-base leading-none font-semibold tracking-tight text-ink-1`}
       >
         ne
         <span className="font-mono font-normal tracking-normal text-ink-3">

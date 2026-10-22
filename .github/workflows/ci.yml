@@ -38,8 +38,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: LuizDevExe/nest-api
-          # TODO: trocar para "master" assim que os PRs da API (base/front-apoio) forem mergeados.
-          ref: ${{ vars.API_REF || 'front-apoio' }}
+          # TODO: trocar para "master" assim que os PRs da API (front-apoio, comunidades) forem mergeados.
+          ref: ${{ vars.API_REF || 'comunidades' }}
           path: api
 
       - name: Node.js

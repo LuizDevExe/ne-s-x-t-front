@@ -23,23 +23,27 @@ export function Paginacao({
   pagina,
   totalPaginas,
   total,
+  base = "/",
+  unidade = "posts",
 }: {
   pagina: number;
   totalPaginas: number;
   total: number;
+  base?: string;
+  unidade?: string;
 }) {
   return (
     <nav aria-label="Paginação" className="flex items-center justify-between gap-3">
       <p className="text-[13px] text-ink-3">
         Página <span className="font-mono text-ink-2">{pagina}</span> de{" "}
         <span className="font-mono text-ink-2">{totalPaginas}</span> ·{" "}
-        <span className="font-mono text-ink-2">{total}</span> posts
+        <span className="font-mono text-ink-2">{total}</span> {unidade}
       </p>
       <div className="flex gap-2">
-        <BotaoPagina href={`/?page=${pagina - 1}`} ativo={pagina > 1}>
+        <BotaoPagina href={`${base}?page=${pagina - 1}`} ativo={pagina > 1}>
           Anterior
         </BotaoPagina>
-        <BotaoPagina href={`/?page=${pagina + 1}`} ativo={pagina < totalPaginas}>
+        <BotaoPagina href={`${base}?page=${pagina + 1}`} ativo={pagina < totalPaginas}>
           Próxima
         </BotaoPagina>
       </div>

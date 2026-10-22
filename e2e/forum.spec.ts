@@ -36,7 +36,7 @@ test("duplo clique em Responder cria só uma resposta", async ({ page }) => {
 
   const respostas = page.locator("ol > li");
   await expect(respostas).toHaveCount(1);
-  await expect(page.getByRole("heading", { name: /respostas/ })).toContainText("1");
+  await expect(page.getByRole("heading", { name: /respostas?$/ })).toContainText("1");
 });
 
 test("duplo clique em Publicar cria só um post", async ({ page }) => {

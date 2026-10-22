@@ -49,12 +49,14 @@ usuários (e-mail com timestamp + número aleatório), então a suíte não exig
 
 `e2e/acessibilidade.spec.ts` roda o [axe](https://www.deque.com/axe/) em `/entrar`,
 `/criar-conta`, `/`, `/post/:id` e `/novo`, depois que o conteúdo (streamed via Suspense)
-já carregou, e falha se houver qualquer violação.
+já carregou, e falha se houver qualquer violação. `e2e/comunidades.spec.ts` faz o mesmo em
+`/c`, `/c/nova`, `/c/:slug` e `/c/:slug/membros`, além dos fluxos de cargo (promover a
+moderadora, que apaga o post de um membro) e de banimento.
 
 ## CI
 
 `.github/workflows/ci.yml` sobe um Postgres de serviço, faz checkout da API
-(`LuizDevExe/nest-api`, hoje na branch `front-apoio` — trocar para `master` quando os PRs
+(`LuizDevExe/nest-api`, hoje na branch `comunidades` — trocar para `master` quando os PRs
 de lá forem mergeados) numa pasta `api/`, roda `prisma migrate deploy` e `node dist/main`
 nela, espera `http://localhost:3000/api` responder, e só então roda `lint`, `vitest` e
 `playwright test` no front. O relatório HTML do Playwright é subido como artefato quando

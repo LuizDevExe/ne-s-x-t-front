@@ -15,6 +15,7 @@ type ContadorProps = {
   multiline?: boolean;
   rows?: number;
   placeholder?: string;
+  opcional?: boolean;
 };
 
 // Campo com contagem "n/max" ao vivo (título 0/40, conteúdo/resposta 0/255).
@@ -31,6 +32,7 @@ export function Contador({
   multiline,
   rows,
   placeholder,
+  opcional,
 }: ContadorProps) {
   const [tamanho, setTamanho] = useState(defaultValue.length);
   const contagemId = `${id}-contagem`;
@@ -50,7 +52,7 @@ export function Contador({
         <textarea
           id={id}
           name={name}
-          required
+          required={!opcional}
           maxLength={max}
           rows={rows ?? 4}
           placeholder={placeholder}
@@ -65,7 +67,7 @@ export function Contador({
           id={id}
           name={name}
           type="text"
-          required
+          required={!opcional}
           maxLength={max}
           placeholder={placeholder}
           defaultValue={defaultValue}

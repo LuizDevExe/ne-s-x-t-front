@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { BotaoApagar } from "@/components/botao-apagar";
 import { Cabecalho } from "@/components/cabecalho";
 import { apiFetch, ApiError } from "@/lib/api";
+import { podeModerar, type Cargo } from "@/lib/cargos";
 import { iniciais } from "@/lib/iniciais";
 import { palavraResposta } from "@/lib/respostas";
 import { idDoUsuario } from "@/lib/sessao";
@@ -29,6 +30,7 @@ type Post = {
   createdAt: string;
   updatedAt: string;
   user: { id: number; name: string };
+  community: { slug: string; name: string } | null;
   answers: Answer[];
 };
 
@@ -64,15 +66,30 @@ async function Conteudo({ params }: { params: PageProps<"/post/[id]">["params"] 
     buscarPost(postId),
   ]);
 
+  // Num post de comunidade, moderador ou acima também apaga post e respostas
+  // dos outros. Só decide o que mostrar: a API confere de novo no DELETE.
+  const meuCargo = post.community
+    ? (await apiFetch<{ myRole: Cargo | null }>(`/communities/${post.community.slug}`)).myRole
+    : null;
+  const modero = podeModerar(meuCargo);
   const seuPost = post.user.id === meuId;
 
   return (
     <>
       <Cabecalho usuario={usuario} />
       <main className="mx-auto flex w-full max-w-[760px] flex-1 flex-col gap-6 px-4 pt-8 pb-12 md:px-0 md:pt-10">
-        <Link href="/" className="self-start text-sm font-medium text-ink-3 hover:text-ink-1">
-          ← Posts
-        </Link>
+        {post.community ? (
+          <Link
+            href={`/c/${post.community.slug}`}
+            className="self-start text-sm font-medium text-ink-3 hover:text-ink-1"
+          >
+            ← {post.community.name} <span className="font-mono text-ink-3">c/{post.community.slug}</span>
+          </Link>
+        ) : (
+          <Link href="/" className="self-start text-sm font-medium text-ink-3 hover:text-ink-1">
+            ← Posts
+          </Link>
+        )}
 
         <article className="flex flex-col gap-4 rounded-md border border-hairline-1 bg-surface-1 p-5 md:p-6">
           <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
@@ -90,14 +107,16 @@ async function Conteudo({ params }: { params: PageProps<"/post/[id]">["params"] 
                 <span className="text-ink-3">{tempoRelativo(new Date(post.createdAt), new Date())}</span>
               </div>
             </div>
-            {seuPost && (
+            {(seuPost || modero) && (
               <div className="flex shrink-0 gap-2">
-                <Link
-                  href={`/post/${post.id}/editar`}
-                  className="flex min-h-11 items-center rounded-sm border border-hairline-1 bg-surface-2 px-3.5 text-sm font-medium text-ink-1 hover:bg-surface-3 md:min-h-0 md:h-9"
-                >
-                  Editar
-                </Link>
+                {seuPost && (
+                  <Link
+                    href={`/post/${post.id}/editar`}
+                    className="flex min-h-11 items-center rounded-sm border border-hairline-1 bg-surface-2 px-3.5 text-sm font-medium text-ink-1 hover:bg-surface-3 md:min-h-0 md:h-9"
+                  >
+                    Editar
+                  </Link>
+                )}
                 <BotaoApagar acao={apagarPost.bind(null, post.id)} />
               </div>
             )}
@@ -116,7 +135,7 @@ async function Conteudo({ params }: { params: PageProps<"/post/[id]">["params"] 
           ) : (
             <ol className="flex flex-col gap-px overflow-hidden rounded-md border border-hairline-1 bg-hairline-1">
               {post.answers.map((answer) => (
-                <LinhaResposta key={answer.id} answer={answer} postId={post.id} meuId={meuId} />
+                <LinhaResposta key={answer.id} answer={answer} postId={post.id} meuId={meuId} modero={modero} />
               ))}
             </ol>
           )}
@@ -147,7 +166,17 @@ function SeloSeu() {
   );
 }
 
-function LinhaResposta({ answer, postId, meuId }: { answer: Answer; postId: number; meuId: number | null }) {
+function LinhaResposta({
+  answer,
+  postId,
+  meuId,
+  modero,
+}: {
+  answer: Answer;
+  postId: number;
+  meuId: number | null;
+  modero: boolean;
+}) {
   const seu = answer.user.id === meuId;
   return (
     <li className="flex flex-col gap-2 bg-surface-1 px-4 py-3 md:px-5 md:py-4">
@@ -159,7 +188,7 @@ function LinhaResposta({ answer, postId, meuId }: { answer: Answer; postId: numb
           ·
         </span>
         <span className="text-ink-3">{tempoRelativo(new Date(answer.createdAt), new Date())}</span>
-        {seu && (
+        {(seu || modero) && (
           <div className="ml-auto">
             <BotaoApagar
               acao={apagarResposta.bind(null, answer.id, postId)}

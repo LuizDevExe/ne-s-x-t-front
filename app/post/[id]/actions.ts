@@ -25,6 +25,9 @@ export async function responder(
     });
   } catch (e) {
     unstable_rethrow(e); // deixa passar redirect()/notFound() do apiFetch (ex.: sessão expirada)
+    if (e instanceof ApiError && e.status === 403) {
+      return { erro: "Só membros desta comunidade podem responder. Entre na comunidade e tente de novo." };
+    }
     if (e instanceof ApiError && e.status === 404) {
       return { erro: "Esse post não existe mais. Volte para a lista de posts." };
     }

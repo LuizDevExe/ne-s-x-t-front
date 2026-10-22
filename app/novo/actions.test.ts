@@ -66,6 +66,7 @@ describe("criarPost: sessão expirada", () => {
       erro: "Não foi possível publicar. Revise título e conteúdo.",
       titulo: "Título",
       conteudo: "Conteúdo qualquer",
+      comunidade: "",
     });
   });
 });

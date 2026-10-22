@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { BotaoEnviar } from "@/components/botao-enviar";
 import { Contador } from "@/components/contador";
 
-type EstadoPost = { erro?: string; titulo?: string; conteudo?: string };
+type EstadoPost = { erro?: string; titulo?: string; conteudo?: string; comunidade?: string };
 type AcaoPost = (estado: EstadoPost, form: FormData) => Promise<EstadoPost>;
 
 // Form de criar e editar post: as pranchetas NovoPost/Post pedem os mesmos
@@ -18,6 +18,8 @@ export function FormularioPost({
   rotuloEnviar,
   rotuloEnviando,
   cancelarHref,
+  comunidades,
+  comunidadeInicial = "",
 }: {
   acao: AcaoPost;
   tituloInicial?: string;
@@ -25,6 +27,9 @@ export function FormularioPost({
   rotuloEnviar: string;
   rotuloEnviando: string;
   cancelarHref: string;
+  // só no criar: o "Onde postar" (Feed geral ou uma das minhas comunidades)
+  comunidades?: { slug: string; name: string }[];
+  comunidadeInicial?: string;
 }) {
   const [estado, disparar] = useActionState(acao, {});
 
@@ -38,6 +43,26 @@ export function FormularioPost({
         <p role="alert" className="text-[13px] text-error">
           {estado.erro}
         </p>
+      )}
+      {comunidades && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="post-onde" className="text-[13px] font-medium text-ink-2">
+            Onde postar
+          </label>
+          <select
+            id="post-onde"
+            name="communitySlug"
+            defaultValue={estado.comunidade ?? comunidadeInicial}
+            className="h-11 w-full rounded-sm border border-hairline-2 bg-surface-1 px-3 text-base text-ink-1 md:h-10 md:text-[15px]"
+          >
+            <option value="">Feed geral</option>
+            {comunidades.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.name} (c/{c.slug})
+              </option>
+            ))}
+          </select>
+        </div>
       )}
       <Contador
         id="post-titulo"

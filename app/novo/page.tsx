@@ -10,20 +10,27 @@ export const metadata: Metadata = { title: "Novo post · ne{s,x}t" };
 
 type Usuario = { id: number; name: string };
 
-export default function Pagina() {
+export default function Pagina({ searchParams }: PageProps<"/novo">) {
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* cookies() só pode ser lido aqui dentro: com cacheComponents, fora
-          de um Suspense isso é erro de build (mesmo padrão de app/page.tsx). */}
+      {/* cookies() e searchParams só podem ser lidos aqui dentro: com cacheComponents,
+          fora de um Suspense isso é erro de build (mesmo padrão de app/page.tsx). */}
       <Suspense fallback={<div className="h-14 shrink-0 border-b border-hairline-1" />}>
-        <Conteudo />
+        <Conteudo searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function Conteudo() {
-  const usuario = await apiFetch<Usuario>("/user/me");
+async function Conteudo({ searchParams }: { searchParams: PageProps<"/novo">["searchParams"] }) {
+  const { c } = await searchParams;
+  // ponytail: as 50 primeiras (máximo da API por página); paginar o seletor se alguém passar disso.
+  const [usuario, { data: comunidades }] = await Promise.all([
+    apiFetch<Usuario>("/user/me"),
+    apiFetch<{ data: { slug: string; name: string }[] }>("/communities?mine=true&limit=50"),
+  ]);
+  // ?c=slug vem do "Novo post aqui"; só pré-seleciona se for uma das minhas
+  const inicial = comunidades.some((x) => x.slug === c) ? String(c) : "";
 
   return (
     <>
@@ -33,7 +40,14 @@ async function Conteudo() {
           ← Posts
         </Link>
         <h1 className="text-2xl font-semibold tracking-[-0.5px] md:text-[28px] md:tracking-[-0.6px]">Novo post</h1>
-        <FormularioPost acao={criarPost} rotuloEnviar="Publicar" rotuloEnviando="Publicando…" cancelarHref="/" />
+        <FormularioPost
+          acao={criarPost}
+          rotuloEnviar="Publicar"
+          rotuloEnviando="Publicando…"
+          cancelarHref={inicial ? `/c/${inicial}` : "/"}
+          comunidades={comunidades}
+          comunidadeInicial={inicial}
+        />
       </main>
     </>
   );

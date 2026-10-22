@@ -8,6 +8,7 @@ type Post = {
   title: string;
   createdAt: string;
   user: { id: number; name: string };
+  community?: { slug: string; name: string } | null;
   answers: unknown[];
 };
 
@@ -33,6 +34,7 @@ export function LinhaPost({ post, meuId }: { post: Post; meuId: number | null })
           {seu && <SeloSeu />}
         </span>
         <span className="text-[13px] text-ink-3">
+          {post.community && <span className="font-mono">c/{post.community.slug} · </span>}
           {post.user.name} · <span className="font-mono text-ink-2">{n}</span> {palavraResposta(n)} · {quando}
         </span>
       </Link>
@@ -44,6 +46,15 @@ export function LinhaPost({ post, meuId }: { post: Post; meuId: number | null })
             {post.title}
           </Link>
           {seu && <SeloSeu />}
+          {post.community && (
+            <Link
+              href={`/c/${post.community.slug}`}
+              title={post.community.name}
+              className="shrink-0 rounded-full border border-hairline-2 px-2 py-0.5 font-mono text-xs leading-[1.4] text-ink-3 hover:text-ink-1"
+            >
+              c/{post.community.slug}
+            </Link>
+          )}
         </div>
         <div className="flex min-w-0 items-center gap-2 text-sm text-ink-2">
           <span
