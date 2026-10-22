@@ -5,7 +5,8 @@ import { Suspense } from "react";
 import { BotaoApagar } from "@/components/botao-apagar";
 import { Cabecalho } from "@/components/cabecalho";
 import { apiFetch, ApiError } from "@/lib/api";
-import { podeModerar, type Cargo } from "@/lib/cargos";
+import { podeModerar } from "@/lib/cargos";
+import { buscarComunidade } from "@/lib/comunidade";
 import { iniciais } from "@/lib/iniciais";
 import { palavraResposta } from "@/lib/respostas";
 import { idDoUsuario } from "@/lib/sessao";
@@ -67,10 +68,10 @@ async function Conteudo({ params }: { params: PageProps<"/post/[id]">["params"] 
   ]);
 
   // Num post de comunidade, moderador ou acima também apaga post e respostas
-  // dos outros. Só decide o que mostrar: a API confere de novo no DELETE.
-  const meuCargo = post.community
-    ? (await apiFetch<{ myRole: Cargo | null }>(`/communities/${post.community.slug}`)).myRole
-    : null;
+  // dos outros, e só membro ativo responde. Só decide o que mostrar: a API
+  // confere de novo no DELETE e no POST da resposta.
+  const comunidade = post.community ? await buscarComunidade(post.community.slug) : null;
+  const meuCargo = comunidade?.myRole ?? null;
   const modero = podeModerar(meuCargo);
   const seuPost = post.user.id === meuId;
 
@@ -117,7 +118,7 @@ async function Conteudo({ params }: { params: PageProps<"/post/[id]">["params"] 
                     Editar
                   </Link>
                 )}
-                <BotaoApagar acao={apagarPost.bind(null, post.id)} />
+                <BotaoApagar acao={apagarPost.bind(null, post.id, post.community?.slug ?? null)} />
               </div>
             )}
           </div>
@@ -141,7 +142,21 @@ async function Conteudo({ params }: { params: PageProps<"/post/[id]">["params"] 
           )}
         </section>
 
-        <FormularioResposta postId={post.id} />
+        {!comunidade || meuCargo !== null ? (
+          <FormularioResposta postId={post.id} />
+        ) : comunidade.banned ? (
+          <p role="status" className="text-sm text-ink-3">
+            Você foi removido desta comunidade.
+          </p>
+        ) : (
+          <p className="text-sm text-ink-3">
+            Entre na comunidade{" "}
+            <Link href={`/c/${comunidade.slug}`} className="font-mono font-medium text-ink-2 hover:text-ink-1">
+              c/{comunidade.slug}
+            </Link>{" "}
+            para responder.
+          </p>
+        )}
       </main>
     </>
   );

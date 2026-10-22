@@ -74,11 +74,12 @@ test("dono cria a comunidade, promove quem entrou a moderadora e ela apaga o pos
   await moderadora.page.goto(urlDoPost);
   await moderadora.page.getByRole("button", { name: "Apagar", exact: true }).click();
   await moderadora.page.getByRole("button", { name: "Sim, apagar" }).click();
-  await moderadora.page.waitForURL("/");
-
-  await moderadora.page.goto(`/c/${slug}`);
+  // apagar um post de comunidade volta para a comunidade, não para o feed geral
+  await moderadora.page.waitForURL(`/c/${slug}`);
   await expect(moderadora.page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(moderadora.page.getByText(titulo)).toHaveCount(0);
+  // getByRole("main") só acha o main visível: com cacheComponents o Next deixa a
+  // página do post anterior no DOM, escondida (<Activity>), com o título dentro
+  await expect(moderadora.page.getByRole("main").getByText(titulo)).toHaveCount(0);
 
   await Promise.all([dono.fechar(), moderadora.fechar(), membro.fechar()]);
 });
@@ -99,6 +100,42 @@ test("quem foi banido não vê Entrar, e sim o aviso de que foi removido", async
   await expect(banido.page.getByRole("button", { name: "Entrar", exact: true })).toHaveCount(0);
 
   await Promise.all([dono.fechar(), banido.fechar()]);
+});
+
+test("no post de comunidade, só membro ativo vê o formulário de resposta", async ({ browser }) => {
+  const dono = await pessoa(browser, "dono-resp");
+  const visitante = await pessoa(browser, "visitante");
+
+  const slug = await criarComunidade(dono.page);
+  await dono.page.getByRole("link", { name: "Novo post aqui" }).click();
+  await dono.page.getByLabel("Título").fill(`Post do dono ${Date.now()}`);
+  await dono.page.getByLabel("Conteúdo").fill("Conteúdo do dono.");
+  await dono.page.getByRole("button", { name: "Publicar", exact: true }).click();
+  await dono.page.waitForURL(/\/post\/\d+$/);
+  const urlDoPost = new URL(dono.page.url()).pathname;
+  const formulario = (page: Page) => page.getByRole("form", { name: "Responder" });
+
+  // quem não é membro vê o convite com o link para a comunidade
+  await visitante.page.goto(urlDoPost);
+  await expect(visitante.page.getByText(`Entre na comunidade c/${slug} para responder.`)).toBeVisible();
+  await expect(formulario(visitante.page)).toHaveCount(0);
+  await visitante.page.getByRole("link", { name: `c/${slug}`, exact: true }).click();
+  await visitante.page.waitForURL(`/c/${slug}`);
+
+  // membro vê o formulário
+  await entrarNa(visitante.page, slug);
+  await visitante.page.goto(urlDoPost);
+  await expect(formulario(visitante.page)).toBeVisible();
+
+  // banido vê o aviso, não o formulário
+  const linha = await acaoNoMembro(dono.page, slug, visitante.nome, "Banir");
+  await linha.getByRole("button", { name: "Sim, banir" }).click();
+  await expect(dono.page.getByRole("listitem").filter({ hasText: visitante.nome })).toHaveCount(0);
+  await visitante.page.goto(urlDoPost);
+  await expect(visitante.page.getByText("Você foi removido desta comunidade.")).toBeVisible();
+  await expect(formulario(visitante.page)).toHaveCount(0);
+
+  await Promise.all([dono.fechar(), visitante.fechar()]);
 });
 
 test("o dono não sai sem passar a posse e vê o que fazer", async ({ browser }) => {

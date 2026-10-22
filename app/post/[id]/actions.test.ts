@@ -68,7 +68,7 @@ describe("sessão expirada: o redirect de apiFetch não vira {erro}", () => {
   describe.each([
     ["responder", () => responder(1, {}, formularioResposta())],
     ["editarPost", () => editarPost(1, {}, formularioPost())],
-    ["apagarPost", () => apagarPost(1, {}, new FormData())],
+    ["apagarPost", () => apagarPost(1, null, {}, new FormData())],
     ["apagarResposta", () => apagarResposta(1, 2, {}, new FormData())],
   ] as const)("%s", (_nome, chamar) => {
     it("relança o redirect em vez de devolver { erro: ERRO_SERVIDOR }", async () => {
@@ -85,5 +85,21 @@ describe("sessão expirada: o redirect de apiFetch não vira {erro}", () => {
     await expect(responder(1, {}, formularioResposta())).resolves.toEqual({
       erro: "Não foi possível enviar a resposta. Revise o texto e tente de novo.",
     });
+  });
+});
+
+describe("apagarPost volta para a comunidade do post", () => {
+  beforeEach(() => {
+    apiFetchMock.mockReset();
+    redirectMock.mockClear();
+  });
+
+  it.each([
+    ["post de comunidade vai para /c/<slug>", "nest-br", "/c/nest-br"],
+    ["post do feed geral vai para /", null, "/"],
+    ["slug adulterado no argumento ligado cai em /", "../entrar", "/"],
+  ] as const)("%s", async (_caso, slug, destino) => {
+    apiFetchMock.mockResolvedValue(undefined);
+    await expect(apagarPost(1, slug, {}, new FormData())).rejects.toThrow(`NEXT_REDIRECT_SENTINEL:${destino}`);
   });
 });

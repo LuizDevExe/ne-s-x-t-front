@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
+import { slugValido } from "@/lib/cargos";
 
 const ERRO_DONO = "Esse post é de outra pessoa.";
 const ERRO_SERVIDOR = "Não conseguimos falar com o servidor. Tente de novo em alguns segundos.";
@@ -77,22 +78,27 @@ export async function editarPost(id: number, _anterior: EstadoPost, form: FormDa
 
 export type EstadoApagar = { erro?: string };
 
+// slug é o da comunidade do post (null no feed geral): apagado, volta para lá.
+// Vem de um argumento ligado, então é validado antes de virar caminho.
 export async function apagarPost(
   id: number,
+  slug: string | null,
   _anterior: EstadoApagar,
   _form: FormData,
 ): Promise<EstadoApagar> {
+  const destino = slugValido(slug) ? `/c/${slug}` : "/";
   try {
     await apiFetch(`/post/${id}`, { method: "DELETE" });
   } catch (e) {
     unstable_rethrow(e); // deixa passar redirect()/notFound() do apiFetch (ex.: sessão expirada)
     if (e instanceof ApiError && e.status === 403) return { erro: ERRO_DONO };
-    if (e instanceof ApiError && e.status === 404) redirect("/");
+    if (e instanceof ApiError && e.status === 404) redirect(destino);
     return { erro: ERRO_SERVIDOR };
   }
 
   revalidatePath("/");
-  redirect("/");
+  revalidatePath(destino);
+  redirect(destino);
 }
 
 export async function apagarResposta(
