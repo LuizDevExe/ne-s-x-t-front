@@ -97,6 +97,8 @@ async function moderar(slug: string, userId: number, caminho: string, init: Requ
     if (e instanceof ApiError && e.status === 404) return { erro: ERRO_MEMBRO };
     return { erro: ERRO_SERVIDOR };
   }
+  // a página da comunidade também muda (contagem de membros, meu cargo)
+  revalidatePath(`/c/${slug}`);
   revalidatePath(`/c/${slug}/membros`);
   return {};
 }
